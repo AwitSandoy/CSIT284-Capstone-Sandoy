@@ -31,7 +31,7 @@ class ClassSchedule {
     };
   }
 
-  factory ClassSchedule.fromMap(String id, Map<String, dynamic> map) {
+  factory ClassSchedule.fromMap(Map<String, dynamic> map, String id) {
     return ClassSchedule(
       id: id,
       subjectCode: map['subjectCode'] ?? '',

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_schedule.dart';
-import '../models/firestore_service.dart';
+import '../models/realtime_database_service.dart';
 import '../widgets/schedule_card.dart';
 import 'class_form_screen.dart';
 import 'timetable_screen.dart';
@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firestoreService = FirestoreService();
+    final databaseService = RealtimeDatabaseService();
     final today = _getCurrentDayName();
 
     return Scaffold(
@@ -53,13 +53,15 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Mandela - Today\'s Classes'),
         actions: [
           IconButton(
-            tooltip: 'Seed Dummy Classes to Firestore',
+            tooltip: 'Seed Dummy Classes to Realtime Database',
             icon: const Icon(Icons.cloud_upload),
             onPressed: () async {
-              await firestoreService.seedDummyData();
+              await databaseService.seedDummyData();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Seeded classes to Firestore.')),
+                  const SnackBar(
+                    content: Text('Seeded classes to Realtime Database.'),
+                  ),
                 );
               }
             },
@@ -77,7 +79,7 @@ class HomeScreen extends StatelessWidget {
         label: const Text('Add Schedule'),
       ),
       body: StreamBuilder<List<ClassSchedule>>(
-        stream: firestoreService.getClassesStream(),
+        stream: databaseService.getClassesStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -85,7 +87,6 @@ class HomeScreen extends StatelessWidget {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-
           final allClasses = snapshot.data ?? [];
           final todaysClasses =
               allClasses.where((c) => c.dayOfWeek == today).toList();
@@ -128,7 +129,7 @@ class HomeScreen extends StatelessWidget {
                       ? Center(
                           child: Text(
                             allClasses.isEmpty
-                                ? 'No classes in Firestore yet. Tap the cloud upload icon to seed your classes.'
+                                ? 'No classes in Realtime Database yet. Tap the cloud upload icon to seed your classes.'
                                 : 'No classes scheduled for $today.',
                           ),
                         )

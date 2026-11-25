@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_schedule.dart';
-import '../models/firestore_service.dart';
+import '../models/realtime_database_service.dart';
 
 class ClassFormScreen extends StatefulWidget {
   final ClassSchedule? existingClass;
@@ -13,8 +13,7 @@ class ClassFormScreen extends StatefulWidget {
 
 class _ClassFormScreenState extends State<ClassFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firestoreService = FirestoreService();
-
+  final _databaseService = RealtimeDatabaseService();
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
   late final TextEditingController _startController;
@@ -60,7 +59,6 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
 
   Future<void> _saveClass() async {
     if (!_formKey.currentState!.validate()) return;
-
     final schedule = ClassSchedule(
       id: widget.existingClass?.id ?? '',
       subjectCode: _codeController.text.trim(),
@@ -71,13 +69,11 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
       room: _roomController.text.trim(),
       instructor: _instructorController.text.trim(),
     );
-
     if (widget.existingClass == null) {
-      await _firestoreService.addClass(schedule);
+      await _databaseService.addClass(schedule);
     } else {
-      await _firestoreService.updateClass(schedule);
+      await _databaseService.updateClass(schedule);
     }
-
     if (mounted) Navigator.pop(context);
   }
 

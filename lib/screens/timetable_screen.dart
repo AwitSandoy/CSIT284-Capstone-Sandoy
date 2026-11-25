@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_schedule.dart';
-import '../models/firestore_service.dart';
+import '../models/realtime_database_service.dart';
 import 'class_form_screen.dart';
 
 class TimetableScreen extends StatelessWidget {
@@ -17,7 +17,7 @@ class TimetableScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firestoreService = FirestoreService();
+    final databaseService = RealtimeDatabaseService();
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +33,7 @@ class TimetableScreen extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
       body: StreamBuilder<List<ClassSchedule>>(
-        stream: firestoreService.getClassesStream(),
+        stream: databaseService.getClassesStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -41,12 +41,12 @@ class TimetableScreen extends StatelessWidget {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-
           final classes = List<ClassSchedule>.from(snapshot.data ?? []);
           if (classes.isEmpty) {
-            return const Center(child: Text('No classes found in Firestore.'));
+            return const Center(
+              child: Text('No classes found in Realtime Database.'),
+            );
           }
-
           classes.sort((a, b) => _dayOrder
               .indexOf(a.dayOfWeek)
               .compareTo(_dayOrder.indexOf(b.dayOfWeek)));
@@ -90,7 +90,7 @@ class TimetableScreen extends StatelessWidget {
                         tooltip: 'Delete Schedule',
                         icon: const Icon(Icons.delete),
                         onPressed: () async {
-                          await firestoreService.deleteClass(item.id);
+                          await databaseService.deleteClass(item.id);
                         },
                       ),
                     ],
