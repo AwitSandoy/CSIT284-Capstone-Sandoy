@@ -76,7 +76,7 @@ class HomeScreen extends StatelessWidget {
           );
         },
         icon: const Icon(Icons.add),
-        label: const Text('Add Schedule'),
+        label: const Text('Add Class Schedule'),
       ),
       body: StreamBuilder<List<ClassSchedule>>(
         stream: databaseService.getClassesStream(),
@@ -153,7 +153,7 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.calendar_view_week),
-                    label: const Text('View Full Weekly Schedule'),
+                    label: const Text('View Weekly Schedule'),
                   ),
                 ),
                 const SizedBox(height: 56),

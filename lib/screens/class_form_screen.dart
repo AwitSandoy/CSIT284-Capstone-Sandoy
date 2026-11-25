@@ -103,7 +103,7 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Subject Name',
+                  labelText: 'Subject Name (e.g., Platform-based Development 3 (Mobile))',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -154,7 +154,7 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
               TextFormField(
                 controller: _roomController,
                 decoration: const InputDecoration(
-                  labelText: 'Room (e.g., NGE 102)',
+                  labelText: 'Room Code (e.g., NGE 102)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -163,7 +163,7 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
               TextFormField(
                 controller: _instructorController,
                 decoration: const InputDecoration(
-                  labelText: 'Instructor',
+                  labelText: 'Instructor\'s Name (e.g., Sir. Albert Espinoza)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -172,7 +172,7 @@ class _ClassFormScreenState extends State<ClassFormScreen> {
               FilledButton.icon(
                 onPressed: _saveClass,
                 icon: const Icon(Icons.save),
-                label: Text(isEditing ? 'Update Class' : 'Save Class'),
+                label: Text(isEditing ? 'Update Class Schedule Info' : 'Save Class Schedule Info'),
               ),
             ],
           ),
