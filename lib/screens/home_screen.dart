@@ -1,64 +1,165 @@
 import 'package:flutter/material.dart';
-import '../models/dummy_data.dart';
+import '../models/class_schedule.dart';
+import '../models/firestore_service.dart';
+import '../widgets/schedule_card.dart';
+import 'class_form_screen.dart';
 import 'timetable_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  String _getCurrentDayName() {
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return days[DateTime.now().weekday - 1];
+  }
+
+  void _showReminderDialog(BuildContext context, ClassSchedule item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.notifications_active),
+        title: const Text('10-Minute Class Reminder'),
+        content: Text(
+          'Upcoming class in 10 minutes:\n\n'
+          '${item.subjectCode}: ${item.subjectName}\n'
+          'Time: ${item.startTime} - ${item.endTime}\n'
+          'Room: ${item.room}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Dismiss'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Filter dummy classes for demonstration (e.g., Monday's classes)
-    final todaysClasses = DummyData.classes.where((c) => c.dayOfWeek == 'Monday').toList();
+    final firestoreService = FirestoreService();
+    final today = _getCurrentDayName();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mandela - Today\'s Classes'),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            tooltip: 'Seed Dummy Classes to Firestore',
+            icon: const Icon(Icons.cloud_upload),
+            onPressed: () async {
+              await firestoreService.seedDummyData();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Seeded classes to Firestore.')),
+                );
+              }
+            },
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Classes Scheduled for Today (Monday)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: todaysClasses.length,
-                itemBuilder: (context, index) {
-                  final item = todaysClasses[index];
-                  return Card(
-                    elevation: 3,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ClassFormScreen()),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Schedule'),
+      ),
+      body: StreamBuilder<List<ClassSchedule>>(
+        stream: firestoreService.getClassesStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final allClasses = snapshot.data ?? [];
+          final todaysClasses =
+              allClasses.where((c) => c.dayOfWeek == today).toList();
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (todaysClasses.isNotEmpty)
+                  Card(
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     child: ListTile(
-                      title: Text('${item.subjectCode}: ${item.subjectName}'),
-                      subtitle: Text('${item.startTime} - ${item.endTime} | ${item.room}'),
-                      trailing: Text(item.instructor, style: const TextStyle(fontSize: 12)),
+                      leading: const Icon(Icons.alarm),
+                      title: Text(
+                        'Next Reminder: ${todaysClasses.first.subjectCode} at ${todaysClasses.first.startTime}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Room ${todaysClasses.first.room} • 10-minute alert ready',
+                      ),
+                      trailing: TextButton(
+                        onPressed: () =>
+                            _showReminderDialog(context, todaysClasses.first),
+                        child: const Text('Preview Alert'),
+                      ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  'Classes Scheduled for Today ($today)',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: todaysClasses.isEmpty
+                      ? Center(
+                          child: Text(
+                            allClasses.isEmpty
+                                ? 'No classes in Firestore yet. Tap the cloud upload icon to seed your classes.'
+                                : 'No classes scheduled for $today.',
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: todaysClasses.length,
+                          itemBuilder: (context, index) {
+                            return ScheduleCard(schedule: todaysClasses[index]);
+                          },
+                        ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TimetableScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_view_week),
+                    label: const Text('View Full Weekly Schedule'),
+                  ),
+                ),
+                const SizedBox(height: 56),
+              ],
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const TimetableScreen()),
-                  );
-                },
-                icon: const Icon(Icons.calendar_view_week),
-                label: const Text('View Full Weekly Timetable'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

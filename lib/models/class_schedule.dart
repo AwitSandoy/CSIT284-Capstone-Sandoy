@@ -18,4 +18,29 @@ class ClassSchedule {
     required this.room,
     required this.instructor,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'subjectCode': subjectCode,
+      'subjectName': subjectName,
+      'dayOfWeek': dayOfWeek,
+      'startTime': startTime,
+      'endTime': endTime,
+      'room': room,
+      'instructor': instructor,
+    };
+  }
+
+  factory ClassSchedule.fromMap(String id, Map<String, dynamic> map) {
+    return ClassSchedule(
+      id: id,
+      subjectCode: map['subjectCode'] ?? '',
+      subjectName: map['subjectName'] ?? '',
+      dayOfWeek: map['dayOfWeek'] ?? '',
+      startTime: map['startTime'] ?? '',
+      endTime: map['endTime'] ?? '',
+      room: map['room'] ?? '',
+      instructor: map['instructor'] ?? '',
+    );
+  }
 }
